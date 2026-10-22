@@ -1,0 +1,95 @@
+Você é um designer-engenheiro front-end sênior. Gere o front-end completo do **AdaptAI** em React + TypeScript + Vite + Tailwind CSS (componentes no estilo shadcn/ui, ícones lucide-react, roteamento com react-router). Idioma da interface: pt-BR, com acentos corretos. Não gere backend.
+
+## 1. Produto
+AdaptAI é um sistema de adaptação de conteúdo educacional (Hackathon ONE G10). O usuário envia documentação técnica densa (PDF, Markdown ou texto) e recebe um pacote de estudo personalizado: Tutorial, Flashcards, Quiz, Resumo ou Roteiro de Aula. A adaptação depende do perfil do destinatário, do nicho e do nível de detalhe. Todo conteúdo é ancorado na fonte original (RAG), com score de fidelidade visível. O aluno ganha XP, evolui por 5 níveis e faz Teste de Nível. O sistema sugere e alerta, nunca bloqueia.
+Diferenciais que a interface precisa mostrar: Trilha de Evolução gamificada, Adaptação Universal (rótulos por domínio), Motor de Analogias, ancoragem na fonte.
+
+## 2. Referências de layout (adaptar, não copiar)
+- **Studeli (studeli.com/pt/comecar):** hero com título curto e uma palavra em destaque, CTA único "Começar – é grátis" com "Sem necessidade de cartão". Seção "Tudo o que você precisa numa única plataforma" com mockup da app. Passos numerados "Comece a aprender em minutos, não em horas". FAQ em acordeão e CTA final. No app: sidebar agrupada por categoria, painel "Comece a criar" com grade de cards por tipo de conteúdo, dropzone de upload ("clique ou arraste"), busca ⌘K, card "O seu resumo" com progresso.
+- **Astra AI (astra-ai.co/br):** foco em tutor de IA com passos guiados, "Exam Prep" que gera plano a partir de material enviado, modo socrático, gamificação por níveis, prova social e garantia, tom confiante e direto, CTA recorrente.
+- Crie identidade visual própria (nome, logo simples, paleta, tipografia). Não reutilize textos, mascotes, logos ou imagens dessas marcas.
+
+## 3. Direção visual
+Moderna, limpa, "edtech tech-forward". Fundo claro com suporte a dark mode. Uma cor primária (índigo/violeta) e uma de acento (para XP e conquistas). Cantos 12–16px, sombras suaves, tipografia Inter ou Plus Jakarta Sans, microinterações discretas. Mobile-first e responsivo. Acessível: contraste AA, foco visível, navegação por teclado.
+
+## 4. Telas
+**A. Landing (pública, `/`)**
+1. Navbar: logo, Funcionalidades, Como funciona, FAQ, Entrar, Criar conta.
+2. Hero: "Transforme documentação densa em estudo sob medida" (ajuste a copy), subtítulo, CTA "Começar grátis". Ao lado, mockup animado: documento entrando e virando flashcards.
+3. Faixa de diferenciais, 4 cards: Trilha de Evolução, Adaptação Universal, Motor de Analogias, Fiel à fonte (RAG).
+4. "Um documento, cinco formatos": Tutorial, Flashcards, Quiz, Resumo e Roteiro de Aula, com prévia interativa de cada um.
+5. "Adaptação Universal": toggle de domínio (TI / Medicina / Finanças / Geral) que muda ao vivo o rótulo dos níveis (ver tabela da seção 6).
+6. "Como funciona" em 5 passos numerados: Envie → Escolha perfil/formato/nicho → Receba o pacote → Estude e ganhe XP → Evolua com o Teste de Nível.
+7. Seção de gamificação: barra de XP, 5 níveis, selo "Sugere e alerta, nunca bloqueia".
+8. FAQ em acordeão, CTA final, footer.
+
+**B. Auth:** `/cadastro` (nome, e-mail, senha, nivel_declarado) e `/login`. Validação inline. Erros de API mostrados com a mensagem do campo `mensagem`.
+
+**C. App pós-login (layout com sidebar + topbar)**
+- Sidebar: Painel, Nova Adaptação, Minhas Adaptações, Documentos, Minha Trilha. Rodapé com usuário, nível com rótulo de domínio e barra de XP.
+- **Painel:** "Bem-vindo de volta, {nome}", card de Início rápido com dropzone, cards de formato (5), últimas adaptações, card de progresso/XP, aviso quando o Teste de Nível estiver disponível.
+- **Nova Adaptação (wizard em 3 passos):** (1) documento: upload PDF/MD ou texto colado + título; (2) personalização: perfil_destinatario (chips), formato_saida (cards), nicho_setor, nivel_detalhe (segmentado), toggles incluir_analogias e incluir_microlearning; (3) revisão e "Gerar". Estados: enviando, indexando, gerando (etapas animadas), sucesso, erro.
+- **Resultado da Adaptação:** header com título, chips de metadados (perfil aplicado, formato, nicho, tempo estimado, domínio), conceitos-chave e pré-requisitos. Alerta amarelo quando `alerta_descompasso` for true. Corpo com renderer por formato (ver seção 7). Painel lateral "Qualidade": ancoragem_fonte_score e fidelidade_analogias_score como medidores, clareza_pedagogica, chunks_utilizados, badge "Busca híbrida". Botão "Ver fonte" por item abre drawer com os chunks de `fontes_chunks`. Badge "cache" quando `cache_hit` for true. Status do upload ao bucket (pendente/concluído/falha).
+- **Minhas Adaptações:** lista/grade com filtros (formato, nicho) e busca. Estado vazio ilustrado.
+- **Minha Trilha:** os 5 níveis em timeline com o atual destacado, XP total e limiar, conceitos (em_aprendizado → dominado), card do Teste de Nível (indisponivel / disponivel / aprovado / reprovado) com tom de sugestão, nunca de bloqueio.
+
+## 5. Camada de dados (obrigatório)
+
+O app deve funcionar 100% com dados mockados, SEM nenhuma requisição de rede ativa. Porém, o código real de integração com a API deve estar completo, tipado e COMENTADO dentro de cada função de serviço, pronto para eu descomentar e apagar o mock.
+
+### Estrutura
+- `src/services/http.ts`: cliente base com fetch. Todo o conteúdo fica comentado, exceto os tipos exportados. Deve conter, comentados: `API_BASE_URL = "/api/v1"`, helper `request<T>(path, options)` que injeta `Authorization: Bearer <token>`, faz parse de JSON, e lança `ApiError` quando a resposta vier no formato `{status:"erro", codigo, mensagem, detalhes[], request_id}`. Tratamento de 401 NAO_AUTENTICADO: limpar token e redirecionar para /login. Upload usa `FormData` (multipart), sem definir Content-Type manualmente.
+- `src/services/auth.service.ts`, `usuarios.service.ts`, `documentos.service.ts`, `adaptacoes.service.ts`, `perfil.service.ts`, `health.service.ts`: um arquivo por recurso, uma função por endpoint do contrato.
+- `src/mocks/`: fixtures e `delay(ms)` (400–1200 ms) para simular latência.
+
+### Padrão obrigatório em CADA função de serviço
+Cada função tem dois blocos claramente delimitados:
+
+export async function login(body: LoginRequest): Promise<LoginResponse> {
+  // ===== REAL API — descomente para integrar (e remova o bloco MOCK) =====
+  // return request<LoginResponse>("/auth/login", {
+  //   method: "POST",
+  //   body: JSON.stringify(body),
+  // });
+  // ========================================================================
+
+  // ===== MOCK — remover após integrar =====
+  await delay();
+  return mockLoginResponse;
+  // =========================================
+}
+
+### Regras
+- Cada função mapeia 1:1 com o contrato: POST /auth/cadastro, POST /auth/login, GET /usuarios/me, GET /health, POST /documentos (multipart), POST /adaptacoes, GET /adaptacoes, GET /perfil.
+- O bloco real usa os tipos TypeScript do contrato, com o método HTTP, a rota, o body e a autenticação corretos. Rotas públicas (/auth/cadastro, /auth/login, /health) NÃO enviam Authorization.
+- Em `http.ts`, comente também o tratamento dos códigos: 401, 409 EMAIL_JA_CADASTRADO, 422 VALIDACAO_FALHOU (com `detalhes` mapeados para erros de campo do formulário) e 501 NAO_IMPLEMENTADO (mensagem "Em breve").
+- As telas e hooks consomem APENAS as funções de serviço. Nenhum componente chama fetch nem importa fixtures diretamente. Assim, integrar = descomentar nos serviços.
+- Os mocks também simulam os erros do contrato por gatilhos óbvios (ex.: e-mail "duplicado@teste.com" → 409; senha "errada" → 401; documento com título "erro" → 422) para eu testar os estados de erro na UI.
+- Token: helper `tokenStorage` (get/set/clear, memória + localStorage) já ativo, pois não depende da API. Rotas protegidas funcionam com o token mock.
+- Crie `src/services/README.md` com uma tabela: função → endpoint → arquivo, e o passo a passo de integração: (1) descomentar `http.ts`, (2) descomentar o bloco REAL em cada serviço, (3) apagar o bloco MOCK, (4) conferir `API_BASE_URL` e o proxy do Vite (`/api` → `http://localhost`) para dev.
+- Configure o proxy no `vite.config.ts` já pronto para dev: `/api` e `/docs` apontando para o Nginx/backend, deixando o bloco comentado se necessário.
+
+## 6. Regras de domínio (frontend)
+Os valores do enum são fixos. A tradução visual vem de `dominio_conhecimento`:
+| Nivel | TI | Medicina | Finanças | Geral |
+|---|---|---|---|---|
+| Iniciante | Iniciante | Iniciante | Iniciante | Iniciante |
+| Basico | Dev Junior | Estudante | Analista Junior | Aprendiz |
+| Intermediario | Dev Pleno | Residente | Analista Pleno | Praticante |
+| Avancado | Tech Lead | Especialista | Gestor | Avançado |
+| Especialista | Arquiteto | Preceptor | CFO | Especialista |
+Implemente `getRotuloNivel(nivel, dominio)`, usando "Geral" como fallback para domínios sem coluna. Exiba também labels de enums com acento (Básico, Educação, Jurídico). Perfil "Gestor/Executivo" existe só como destinatário.
+Enums do contrato (valores no JSON, sem acento): Nivel (Iniciante, Basico, Intermediario, Avancado, Especialista), PerfilSaida (os 5 níveis + Gestor/Executivo), FormatoSaida (Tutorial, Flashcards, Quiz, Resumo, Roteiro de Aula), Nicho (Geral, Fintech, Saude, E-commerce, Educacao, Juridico), NivelDetalhe (Didatico, Intermediario, Aprofundado), StatusUpload (pendente, concluido, falha), DominioConhecimento (Geral, TI, Medicina, Financas, Juridico, Engenharia, Educacao), ClassificadorUsado (local, api, fallback).
+
+## 7. Renderers por formato
+Flashcards (flip 3D, frente/verso, dica_didatica, navegação por teclado, marcar "dominado"), Tutorial (seções com introdução contextualizada), Resumo, Roteiro de Aula e Quiz (múltipla escolha com feedback e explicação). O contrato só define o schema de Flashcards. Para os demais, invente um schema plausível em `types/adaptacao.ts`, com o comentário `// PROVISÓRIO — aguardando contrato`. Analogias ficam num cartão expansível com `mapeamento` (termo técnico → elemento da analogia) e `limite_da_analogia`. Microlearning é opcional (null).
+
+## 8. Fixtures
+Use o JSON de exemplo do contrato (VCN na OCI, Flashcards) como mock principal, com duas correções: `dominio_conhecimento: "TI"` e `rotulo_perfil_aplicado: "Iniciante"` (o exemplo original traz "Medicina"/"Estudante", o que contradiz a tabela da seção 6). Crie também mocks de Quiz, Resumo e Tutorial, um cenário com `alerta_descompasso: true`, um com `cache_hit: true` e um de erro 422. Crie um usuário mock com XP próximo do limiar do Teste de Nível.
+
+## 9. Entrega
+- Estrutura: `src/{pages,components,features,services,types,lib,mocks}`.
+- README curto: como rodar, como trocar o mock pelo backend, mapeamento tela → endpoint.
+- Todas as telas navegáveis em modo mock. Todos os estados (loading, vazio, erro) implementados.
+- Sem dependências pesadas. Código tipado, sem `any`.
+- Verificação final: busque no código por "REAL API" e "MOCK"; os pares devem existir em todas as funções de serviço, e nenhum fetch pode estar ativo fora de comentários.
